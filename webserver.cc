@@ -2,14 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unordered_map>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+
+#include "HTTPRequestParser.h"
 
 #define BACKLOG 10  /* pending connections queue size */
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
     int port;
@@ -58,13 +62,23 @@ int main(int argc, char *argv[]) {
             continue;
         }
         
+        HTTPRequest request;
+        HTTPRequestParser parser;
         // Parse Request
+        parser.Parse(new_fd, &request);
+        // printf("%s", request.ToString().c_str());
 
-        // Create Response
+        unordered_map<string, string> map = request.ToMap();
 
-        // Send Response
-        char message[] = "HTTP/1.1 200 OK\r\nContent-Length: 14\r\nContent-Type: text/html\r\n\r\nhello world!\n";
-        write(new_fd, message, sizeof(message));
+        for (auto& x : map) {
+            cout << x.first << ": " << x.second << endl;
+        }
+
+        printf("REQUEST COMPLETED\n");
+        // TODO(!): Create Response
+
+        // TODO(!): Send Response
+
         close(new_fd);
     }
 }
