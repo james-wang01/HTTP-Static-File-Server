@@ -19,7 +19,12 @@ using namespace std;
 int fileToBuffer(string file, char* &buffer) {
     ifstream f;
     int length;
-    f.open(file);          
+    if (file.substr(file.find(".") - 1).compare("txt") == 0 ||
+        file.substr(file.find(".") - 1).compare("html") == 0) {
+            f.open(file);
+    } else {
+        f.open(file, ios::binary); 
+    }
     f.seekg(0, ios::end);    
     length = f.tellg();           
     f.seekg(0, ios::beg);    
