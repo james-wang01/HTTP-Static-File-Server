@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
         printf("%s", response);
 
         // TODO(!): Send Response
-        write(new_fd, response, header.size() + length - 1);
+        write(new_fd, response, header.size() + length);
         delete[] buffer;
         delete[] response;
         close(new_fd);
