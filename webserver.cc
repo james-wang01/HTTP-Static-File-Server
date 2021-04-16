@@ -24,7 +24,7 @@ int fileToBuffer(string file, char* &buffer) {
         file.substr(file.find(".", 1) - 1).compare("html") == 0)) {
             f.open(file);
     } else {
-        f.open(file, ios::binary); 
+        f.open(file, ios::in | ios::binary); 
     }
     if (f.fail()) {
         return -1;
@@ -120,16 +120,23 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        string response;
-        response.append("HTTP/1.1 200 OK\r\n");
-        response.append("Content-Length: " + to_string(length) + "\r\n");
-        response.append("Content-Type: " + contentType(map["URL"]) +"\r\n");
-        response.append("\r\n");
-        response.append(buffer);
+        string header;
+        header.append("HTTP/1.1 200 OK\r\n");
+        header.append("Content-Length: " + to_string(length) + "\r\n");
+        header.append("Content-Type: " + contentType(map["URL"]) + "\r\n");
+        header.append("\r\n");
+        const char* ptr = header.c_str();
+
+        char* response = new char[header.size() + length];
+        memcpy(response, ptr, header.size());
+        memcpy(response + header.size(), buffer, length);
+
+        printf("%s", response);
 
         // TODO(!): Send Response
-        write(new_fd, response.c_str(), response.size() - 1);
-        delete buffer;
+        write(new_fd, response, header.size() + length - 1);
+        delete[] buffer;
+        delete[] response;
         close(new_fd);
     }
 }
