@@ -19,8 +19,9 @@ using namespace std;
 int fileToBuffer(string file, char* &buffer) {
     ifstream f;
     int length;
-    if (file.substr(file.find(".", 1) - 1).compare("txt") == 0 ||
-        file.substr(file.find(".", 1) - 1).compare("html") == 0) {
+    if (file.find(".", 1) != string::npos && 
+        (file.substr(file.find(".", 1) - 1).compare("txt") == 0 ||
+        file.substr(file.find(".", 1) - 1).compare("html") == 0)) {
             f.open(file);
     } else {
         f.open(file, ios::binary); 
@@ -118,7 +119,7 @@ int main(int argc, char *argv[]) {
         if (length == -1) {
             continue;
         }
-        
+
         string response;
         response.append("HTTP/1.1 200 OK\r\n");
         response.append("Content-Length: " + to_string(length) + "\r\n");
