@@ -25,6 +25,9 @@ int fileToBuffer(string file, char* &buffer) {
     } else {
         f.open(file, ios::binary); 
     }
+    if (f.fail()) {
+        return -1;
+    }
     f.seekg(0, ios::end);    
     length = f.tellg();           
     f.seekg(0, ios::beg);    
@@ -112,6 +115,10 @@ int main(int argc, char *argv[]) {
         char* buffer;
         int length = fileToBuffer("." + map["URL"], buffer);
 
+        if (length == -1) {
+            continue;
+        }
+        
         string response;
         response.append("HTTP/1.1 200 OK\r\n");
         response.append("Content-Length: " + to_string(length) + "\r\n");
