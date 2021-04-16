@@ -29,6 +29,21 @@ int fileToBuffer(string file, char* &buffer) {
     return length;
 }
 
+string contentType(string url) {
+    int pos = url.find(".");
+    if (pos == string::npos) {
+        return "application/octet-stream";
+    } else {
+        string s = url.substr(pos + 1);
+        if (s.compare("txt") == 0) { return "text/plain"; }
+        if (s.compare("html") == 0) { return "text/html"; }
+        if (s.compare("jpg") == 0) { return "image/jpg"; }
+        if (s.compare("png") == 0) { return "image/png"; }
+        if (s.compare("gif") == 0) { return "image/gif"; }
+    }
+    return "application/octet-stream";
+}
+
 int main(int argc, char *argv[]) {
     int port;
     if (argc != 2) {
@@ -95,7 +110,7 @@ int main(int argc, char *argv[]) {
         string response;
         response.append("HTTP/1.1 200 OK\r\n");
         response.append("Content-Length: " + to_string(length) + "\r\n");
-        response.append("Content-Type: test/html\r\n");
+        response.append("Content-Type: " + contentType(map["URL"]) +"\r\n");
         response.append("\r\n");
         response.append(buffer);
 
