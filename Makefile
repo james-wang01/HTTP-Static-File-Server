@@ -14,4 +14,4 @@ HTTPRequestParser.o: HTTPRequestParser.cc
 .PHONY: clean
 
 clean:
-	rm webserver webserver.o HTTPRequestParser.o
+	rm -f server webserver.o HTTPRequestParser.o

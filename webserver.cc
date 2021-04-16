@@ -8,12 +8,26 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
+#include <fstream>
 
 #include "HTTPRequestParser.h"
 
 #define BACKLOG 10  /* pending connections queue size */
 
 using namespace std;
+
+int fileToBuffer(string file, char* &buffer) {
+    ifstream f;
+    int length;
+    f.open(file);          
+    f.seekg(0, ios::end);    
+    length = f.tellg();           
+    f.seekg(0, ios::beg);    
+    buffer = new char[length];    
+    f.read(buffer, length);       
+    f.close();   
+    return length;
+}
 
 int main(int argc, char *argv[]) {
     int port;
@@ -61,24 +75,33 @@ int main(int argc, char *argv[]) {
             perror("accept");
             continue;
         }
-        
+
+        // Parse Request
         HTTPRequest request;
         HTTPRequestParser parser;
-        // Parse Request
         parser.Parse(new_fd, &request);
-        // printf("%s", request.ToString().c_str());
-
         unordered_map<string, string> map = request.ToMap();
 
-        for (auto& x : map) {
-            cout << x.first << ": " << x.second << endl;
-        }
+        // for (auto& x : map) {
+        //     cout << x.first << ": " << x.second << endl;
+        // }
 
         printf("REQUEST COMPLETED\n");
+
         // TODO(!): Create Response
+        char* buffer;
+        int length = fileToBuffer("." + map["URL"], buffer);
+
+        string response;
+        response.append("HTTP/1.1 200 OK\r\n");
+        response.append("Content-Length: " + to_string(length) + "\r\n");
+        response.append("Content-Type: test/html\r\n");
+        response.append("\r\n");
+        response.append(buffer);
 
         // TODO(!): Send Response
-
+        write(new_fd, response.c_str(), response.size() - 1);
+        delete buffer;
         close(new_fd);
     }
 }
