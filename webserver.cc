@@ -106,13 +106,7 @@ int main(int argc, char *argv[]) {
         parser.Parse(new_fd, &request);
         unordered_map<string, string> map = request.ToMap();
 
-        // for (auto& x : map) {
-        //     cout << x.first << ": " << x.second << endl;
-        // }
-
-        printf("REQUEST COMPLETED\n");
-
-        // TODO(!): Create Response
+        // Create Response
         char* buffer;
         int length = fileToBuffer("." + map["URL"], buffer);
 
@@ -120,6 +114,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
+        // Create header
         string header;
         header.append("HTTP/1.1 200 OK\r\n");
         header.append("Content-Length: " + to_string(length) + "\r\n");
@@ -127,13 +122,12 @@ int main(int argc, char *argv[]) {
         header.append("\r\n");
         const char* ptr = header.c_str();
 
+        // Add body
         char* response = new char[header.size() + length];
         memcpy(response, ptr, header.size());
         memcpy(response + header.size(), buffer, length);
 
-        printf("%s", response);
-
-        // TODO(!): Send Response
+        // Send Response and Cleanup
         write(new_fd, response, header.size() + length);
         delete[] buffer;
         delete[] response;
