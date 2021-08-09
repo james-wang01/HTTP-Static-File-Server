@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <unordered_map>
+#include <regex>
 
 #include "HTTPRequestParser.h"
 
@@ -24,7 +25,10 @@ string HTTPRequest::ToString() {
 unordered_map<string, string> HTTPRequest::ToMap() {
     unordered_map<string, string> ret;
     ret["METHOD"] = statements_[0];
-    ret["URL"] = statements_[1];
+    regex re_space("\%20");
+    ret["URL"] = regex_replace(statements_[1], re_space, " ");
+    regex re_percent("\%25");
+    ret["URL"] = regex_replace(ret["URL"], re_percent, "\%");
     ret["VERSION"] = statements_[2];
 
     for (int i = 3; i < statements_.size();i += 2) {

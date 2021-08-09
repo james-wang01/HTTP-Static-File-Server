@@ -8,12 +8,50 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
+#include <fstream>
 
 #include "HTTPRequestParser.h"
 
 #define BACKLOG 10  /* pending connections queue size */
 
 using namespace std;
+
+int fileToBuffer(string file, char* &buffer) {
+    ifstream f;
+    int length;
+    if (file.find(".", 1) != string::npos && 
+        (file.substr(file.find(".", 1) - 1).compare("txt") == 0 ||
+        file.substr(file.find(".", 1) - 1).compare("html") == 0)) {
+            f.open(file);
+    } else {
+        f.open(file, ios::in | ios::binary); 
+    }
+    if (f.fail()) {
+        return -1;
+    }
+    f.seekg(0, ios::end);    
+    length = f.tellg();           
+    f.seekg(0, ios::beg);    
+    buffer = new char[length];    
+    f.read(buffer, length);       
+    f.close();   
+    return length;
+}
+
+string contentType(string url) {
+    int pos = url.find(".");
+    if (pos == string::npos) {
+        return "application/octet-stream";
+    } else {
+        string s = url.substr(pos + 1);
+        if (s.compare("txt") == 0) { return "text/plain"; }
+        if (s.compare("html") == 0) { return "text/html"; }
+        if (s.compare("jpg") == 0) { return "image/jpg"; }
+        if (s.compare("png") == 0) { return "image/png"; }
+        if (s.compare("gif") == 0) { return "image/gif"; }
+    }
+    return "application/octet-stream";
+}
 
 int main(int argc, char *argv[]) {
     int port;
@@ -61,24 +99,38 @@ int main(int argc, char *argv[]) {
             perror("accept");
             continue;
         }
-        
+
+        // Parse Request
         HTTPRequest request;
         HTTPRequestParser parser;
-        // Parse Request
         parser.Parse(new_fd, &request);
-        // printf("%s", request.ToString().c_str());
-
         unordered_map<string, string> map = request.ToMap();
 
-        for (auto& x : map) {
-            cout << x.first << ": " << x.second << endl;
+        // Create Response
+        char* buffer;
+        int length = fileToBuffer("." + map["URL"], buffer);
+
+        if (length == -1) {
+            continue;
         }
 
-        printf("REQUEST COMPLETED\n");
-        // TODO(!): Create Response
+        // Create header
+        string header;
+        header.append("HTTP/1.1 200 OK\r\n");
+        header.append("Content-Length: " + to_string(length) + "\r\n");
+        header.append("Content-Type: " + contentType(map["URL"]) + "\r\n");
+        header.append("\r\n");
+        const char* ptr = header.c_str();
 
-        // TODO(!): Send Response
+        // Add body
+        char* response = new char[header.size() + length];
+        memcpy(response, ptr, header.size());
+        memcpy(response + header.size(), buffer, length);
 
+        // Send Response and Cleanup
+        write(new_fd, response, header.size() + length);
+        delete[] buffer;
+        delete[] response;
         close(new_fd);
     }
 }
